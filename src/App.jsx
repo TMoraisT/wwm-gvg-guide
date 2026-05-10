@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 const builds = [
   {
@@ -292,6 +292,7 @@ export default function GVGGuide() {
         {[
           { id: "builds", label: "🗡️ Builds" },
           { id: "groups", label: "🏰 Grupos & Formação" },
+          { id: "map", label: "🗺️ Mapa" },
           { id: "tips", label: "📜 Dicas GVG" },
         ].map(t => (
           <button
@@ -498,6 +499,9 @@ export default function GVGGuide() {
           </div>
         )}
 
+        {/* MAP TAB */}
+        {activeTab === "map" && <GVGMap />}
+
         {/* TIPS TAB */}
         {activeTab === "tips" && (
           <div>
@@ -581,6 +585,422 @@ export default function GVGGuide() {
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "24px", borderTop: "1px solid #1a1208", color: "#3a2e1a", fontSize: "11px", letterSpacing: "2px" }}>
         WHERE WINDS MEET · GVG GUIDE · VERSÃO 1.0.12 / PATCH HEXI 2026
+      </div>
+    </div>
+  );
+}
+
+// ─── MAP POINTS DATA ────────────────────────────────────────────────────────
+const mapPoints = [
+  // ── ALLY SIDE (bottom) ──
+  {
+    id: "ally-base", x: 50, y: 88, emoji: "🏯", label: "Sua Base",
+    color: "#4a9eff", size: 22,
+    title: "Base Aliada",
+    timing: "Permanente",
+    respawn: "—",
+    info: "Ponto de respawn da sua guild. O tempo de respawn aumenta conforme a partida avança. Nos últimos minutos, mortes são extremamente custosas — evite overextend sem suporte.",
+    action: "Respawn de aliados. Ponto de entrega da Fortune Tree para vitória instantânea.",
+  },
+  {
+    id: "ally-tree", x: 50, y: 80, emoji: "🌳", label: "Árvore Aliada",
+    color: "#4a9eff", size: 18,
+    title: "Fortune Tree — Aliada",
+    timing: "Permanente",
+    respawn: "—",
+    info: "A Fortune Tree aliada deve ser protegida. Inimigos tentarão carregá-la até a base deles. Quanto mais jogadores próximos, mais lento o carregamento.",
+    action: "Defender: agrupe aliados ao redor. Use Inkwell Fan para criar Windwalls bloqueando o caminho do carrier.",
+  },
+  {
+    id: "ally-tower-top", x: 18, y: 68, emoji: "🗼", label: "Torre Top",
+    color: "#4a9eff", size: 16,
+    title: "Torre — Lane Superior (Aliada)",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Torre da lane superior da sua equipe. Protege o caminho ao Goose aliado. Destruir torres inimigas dá pontos de vitória se o tempo acabar.",
+    action: "Defender ou usar como ponto de reagrupamento. Buff de +100% dano em torres (comprado com Fun Coins) torna a destruição muito mais rápida.",
+  },
+  {
+    id: "ally-tower-mid", x: 50, y: 68, emoji: "🗼", label: "Torre Mid",
+    color: "#4a9eff", size: 16,
+    title: "Torre — Lane Central (Aliada)",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Torre principal da lane do meio. A mais contestada do mapa — quem controla o mid controla o ritmo da partida.",
+    action: "Ponto de defesa central. Tanks e healers devem operar aqui durante a fase inicial.",
+  },
+  {
+    id: "ally-tower-bot", x: 82, y: 68, emoji: "🗼", label: "Torre Bot",
+    color: "#4a9eff", size: 16,
+    title: "Torre — Lane Inferior (Aliada)",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Torre da lane inferior. Geralmente menos contestada no início — assassinos inimigos podem tentar flanquear por aqui.",
+    action: "Monitorar com o grupo de assassinos do Grupo C. Se cair, o Goose fica exposto pelo flanco.",
+  },
+  {
+    id: "ally-goose", x: 50, y: 74, emoji: "🦢", label: "Ganso Aliado",
+    color: "#4a9eff", size: 20,
+    title: "Goose (Ganso) — Aliado",
+    timing: "Permanente até ser morto",
+    respawn: "Não respawna",
+    info: "O Goose protege a Fortune Tree aliada. Inimigos precisam matá-lo antes de pegar a árvore. Se o duelo dos 10min for perdido, o Goose inimigo recebe -20% defesa e torres -60% HP.",
+    action: "Defender a todo custo. Coordenar Lion's Roar quando inimigos tentarem focar o Goose.",
+  },
+
+  // ── ENEMY SIDE (top) ──
+  {
+    id: "enemy-base", x: 50, y: 12, emoji: "🏯", label: "Base Inimiga",
+    color: "#ff5555", size: 22,
+    title: "Base Inimiga",
+    timing: "Permanente",
+    respawn: "—",
+    info: "Ponto de respawn inimigo. Levar a Fortune Tree inimiga até aqui = vitória instantânea. Protegida por torres e o Goose inimigo.",
+    action: "Objetivo final. Após matar o Goose inimigo, escortar a árvore até aqui com buff Sprint + Relentless Advance.",
+  },
+  {
+    id: "enemy-tree", x: 50, y: 20, emoji: "🌳", label: "Árvore Inimiga",
+    color: "#ff5555", size: 18,
+    title: "Fortune Tree — Inimiga",
+    timing: "Disponível após matar o Goose inimigo",
+    respawn: "—",
+    info: "O objetivo principal de ataque. Após matar o Goose inimigo, um jogador carrega a árvore lentamente em direção à base aliada. O carrier fica muito lento — precisa de escolta.",
+    action: "Carrier usa Sprint (buff do Commander) + Relentless Advance para sair da base inimiga rapidamente. Time inteiro escolta.",
+  },
+  {
+    id: "enemy-tower-top", x: 18, y: 32, emoji: "🗼", label: "Torre Top",
+    color: "#ff5555", size: 16,
+    title: "Torre Inimiga — Lane Superior",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Torre inimiga da lane superior. Destruí-la abre caminho para o Goose pelo flanco. Se o duel dos 10min for ganho, perde 60% do HP automaticamente.",
+    action: "Grupo B (Side Esquerdo) prioriza pressionar essa torre. Use buff +100% dano em torres quando disponível.",
+  },
+  {
+    id: "enemy-tower-mid", x: 50, y: 32, emoji: "🗼", label: "Torre Mid",
+    color: "#ff5555", size: 16,
+    title: "Torre Inimiga — Lane Central",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Principal objetivo do Grupo A (Força Principal). Destruir essa torre abre o caminho direto ao Goose inimigo pelo mid.",
+    action: "Push coordenado após vencer o duel dos 10min. Tanks na frente, DPS foca a torre, healers sustentam.",
+  },
+  {
+    id: "enemy-tower-bot", x: 82, y: 32, emoji: "🗼", label: "Torre Bot",
+    color: "#ff5555", size: 16,
+    title: "Torre Inimiga — Lane Inferior",
+    timing: "Permanente até ser destruída",
+    respawn: "Não respawna",
+    info: "Torre inimiga da lane inferior. Alvo do Grupo C (Side Direito). Pressionar os dois flancos força o inimigo a dividir a defesa.",
+    action: "Grupo C pressiona aqui enquanto o Grupo A ocupa o mid. Forçar divisão da defesa inimiga.",
+  },
+  {
+    id: "enemy-goose", x: 50, y: 26, emoji: "🦢", label: "Ganso Inimigo",
+    color: "#ff5555", size: 20,
+    title: "Goose (Ganso) — Inimigo",
+    timing: "Disponível após destruir ao menos 1 torre inimiga",
+    respawn: "Não respawna",
+    info: "Boss principal inimigo. Destruir 1+ torre abre acesso a ele. Após morto, a Fortune Tree inimiga fica disponível para carregar. Se o duel for ganho: -20% defesa.",
+    action: "Focar com Hair Pulling (Commander skill: +100% dano ao Goose por 10s). Usar EX skills da Nameless Sword durante a janela do buff.",
+  },
+
+  // ── JUNGLE / NEUTRAL MOBS ──
+  {
+    id: "jungle-left-1", x: 10, y: 42, emoji: "👾", label: "Mobs Jungle",
+    color: "#7ec4a8", size: 15,
+    title: "Mobs Neutros — Flanco Esquerdo (Norte)",
+    timing: "A cada 5 minutos",
+    respawn: "5 min · Respawna: 0:00 / 5:00 / 10:00 / 15:00 / 20:00 / 25:00",
+    info: "Mobs de IA nas lanes laterais. Derrotá-los dropa Fun Coins — a moeda usada pelo Commander para comprar buffs decisivos como Frontline Zeal.",
+    action: "Grupo B (3 assassinos) deve farmar aqui continuamente. Prioridade: comprar Frontline Zeal (stacking permanente de dano).",
+  },
+  {
+    id: "jungle-left-2", x: 10, y: 58, emoji: "👾", label: "Mobs Jungle",
+    color: "#7ec4a8", size: 15,
+    title: "Mobs Neutros — Flanco Esquerdo (Sul)",
+    timing: "A cada 5 minutos",
+    respawn: "5 min · Respawna: 0:00 / 5:00 / 10:00 / 15:00 / 20:00 / 25:00",
+    info: "Segundo camp de mobs do flanco esquerdo. Quanto mais camps farmados, mais Fun Coins acumuladas para o Commander gastar em buffs.",
+    action: "Mesmo grupo de assassinos do Grupo B. Limpar todos os camps antes de flanquear o backline inimigo.",
+  },
+  {
+    id: "jungle-right-1", x: 90, y: 42, emoji: "👾", label: "Mobs Jungle",
+    color: "#7ec4a8", size: 15,
+    title: "Mobs Neutros — Flanco Direito (Norte)",
+    timing: "A cada 5 minutos",
+    respawn: "5 min · Respawna: 0:00 / 5:00 / 10:00 / 15:00 / 20:00 / 25:00",
+    info: "Mobs de IA do flanco direito. Responsabilidade do Grupo C (3 assassinos). Mesma função dos flancos esquerdos — farm de Fun Coins.",
+    action: "Grupo C farmando aqui. Após comprar buffs, flanquear healers inimigos e retornar ao mid nos clashes grandes.",
+  },
+  {
+    id: "jungle-right-2", x: 90, y: 58, emoji: "👾", label: "Mobs Jungle",
+    color: "#7ec4a8", size: 15,
+    title: "Mobs Neutros — Flanco Direito (Sul)",
+    timing: "A cada 5 minutos",
+    respawn: "5 min · Respawna: 0:00 / 5:00 / 10:00 / 15:00 / 20:00 / 25:00",
+    info: "Segundo camp do flanco direito. Os dois grupos de assassinos (B e C) devem espelhar um ao outro para máxima eficiência de farm.",
+    action: "Limpar, comprar buffs, flanquear. Repetir a cada spawn de 5 minutos.",
+  },
+
+  // ── SPECIAL EVENTS ──
+  {
+    id: "miniboss-1", x: 50, y: 50, emoji: "💀", label: "Mini-Boss",
+    color: "#e8c97e", size: 18,
+    title: "Mini-Boss — Mid Lane",
+    timing: "Minuto 15 e Minuto 25",
+    respawn: "Aparece 2x por partida: 15:00 e 25:00 · Posição vertical aleatória no mid",
+    info: "Um mini-boss poderoso spawna no mid lane em posição vertical aleatória. Matar esse boss dá vantagem significativa — recompensas de buff ou pontos para o Commander.",
+    action: "Focar o mini-boss com o DPS principal (Grupo A). Tanks absorvem o dano. Cuidado com emboscadas inimigas enquanto o boss está ativo.",
+  },
+  {
+    id: "duel-zone", x: 50, y: 50, emoji: "⚔️", label: "Duelo 1v1",
+    color: "#e05050", size: 17,
+    title: "Zona do Duelo — Halftime (10 minutos)",
+    timing: "Minuto 10 — uma única vez",
+    respawn: "Evento único — ocorre apenas 1x por partida",
+    info: "Ao atingir 10 minutos, o Halftime Performer (Duelista) é puxado para um duelo 1v1 obrigatório. O resto da guild assiste. Vencer = -20% defesa no Goose inimigo + torres inimigas perdem 60% do HP. O maior ponto de virada da partida.",
+    action: "Enviar o melhor duelist (Nameless Sword). O time aguarda e mantém posição. Após o resultado, iniciar push massivo no mid.",
+  },
+
+  // ── PVP ZONES ──
+  {
+    id: "pvp-mid", x: 50, y: 50, emoji: "🔥", label: "Zona PvP Mid",
+    color: "#c47e7e", size: 14,
+    title: "Zona de PvP — Centro do Mapa",
+    timing: "Contínuo — teamfights acontecem aqui a partida toda",
+    respawn: "—",
+    info: "O centro do mapa é onde os grandes teamfights de 30v30 acontecem. CC coordenado (Lion's Roar) e anti-heal (Nullify Healing) são decisivos aqui. Quem controla o mid, controla a partida.",
+    action: "Formação: Tanks na frente → CC/Suporte → DPS → Healers na retaguarda. Coordenar Lion's Roar simultâneo para wipar grupos inimigos.",
+  },
+];
+
+// ─── GVG MAP COMPONENT ───────────────────────────────────────────────────────
+function GVGMap() {
+  const [hovered, setHovered] = useState(null);
+  const [tooltip, setTooltip] = useState({ x: 0, y: 0 });
+  const wrapRef = React.useRef(null);
+
+  const handleMouseEnter = (pt, e) => {
+    if (!wrapRef.current) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    setHovered(pt);
+    setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+  const handleMouseMove = (e) => {
+    if (!hovered || !wrapRef.current) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  // Group unique points (some share coordinates conceptually but rendered once)
+  const uniquePoints = mapPoints.filter(
+    (pt, idx, arr) => arr.findIndex(p => p.id === pt.id) === idx
+  );
+
+  const legendItems = [
+    { color: "#4a9eff", label: "Aliado" },
+    { color: "#ff5555", label: "Inimigo" },
+    { color: "#7ec4a8", label: "Jungle/Mobs" },
+    { color: "#e8c97e", label: "Boss/Evento" },
+    { color: "#e05050", label: "Duelo" },
+    { color: "#c47e7e", label: "PvP Zone" },
+  ];
+
+  return (
+    <div>
+      {/* Legend */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: "12px",
+        padding: "14px 0 18px", justifyContent: "center",
+      }}>
+        {legendItems.map(l => (
+          <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: l.color, boxShadow: `0 0 6px ${l.color}` }} />
+            <span style={{ fontSize: "12px", color: "#7a6540", letterSpacing: "1px" }}>{l.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* SVG Map */}
+      <div ref={wrapRef} style={{ position: "relative", userSelect: "none" }}>
+        <svg
+          viewBox="0 0 100 100"
+          style={{ width: "100%", maxWidth: "680px", display: "block", margin: "0 auto" }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
+        >
+          {/* Background */}
+          <rect x="0" y="0" width="100" height="100" fill="#0a0908" rx="2" />
+
+          {/* Outer border */}
+          <rect x="1" y="1" width="98" height="98" fill="none" stroke="#2a2010" strokeWidth="0.3" rx="1.5" />
+
+          {/* ── LANE PATHS ── */}
+          {/* Mid lane */}
+          <rect x="44" y="5" width="12" height="90" fill="#141008" rx="1" />
+          {/* Top lane (left) */}
+          <rect x="3" y="5" width="10" height="90" fill="#0f0d06" rx="1" />
+          <line x1="8" y1="5" x2="8" y2="95" stroke="#2a2010" strokeWidth="0.15" strokeDasharray="1,2" />
+          {/* Bot lane (right) */}
+          <rect x="87" y="5" width="10" height="90" fill="#0f0d06" rx="1" />
+          <line x1="92" y1="5" x2="92" y2="95" stroke="#2a2010" strokeWidth="0.15" strokeDasharray="1,2" />
+
+          {/* Jungle areas */}
+          <rect x="13" y="30" width="30" height="40" fill="#080b09" rx="1" opacity="0.7" />
+          <rect x="57" y="30" width="30" height="40" fill="#080b09" rx="1" opacity="0.7" />
+
+          {/* Lane labels */}
+          <text x="8" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 8, 50)">LANE TOP</text>
+          <text x="50" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 50, 50)">LANE MID</text>
+          <text x="92" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 92, 50)">LANE BOT</text>
+          <text x="28" y="50" fill="#1a2a1a" fontSize="2" textAnchor="middle">JUNGLE</text>
+          <text x="72" y="50" fill="#1a2a1a" fontSize="2" textAnchor="middle">JUNGLE</text>
+
+          {/* Center divider line */}
+          <line x1="3" y1="50" x2="97" y2="50" stroke="#2a2010" strokeWidth="0.2" strokeDasharray="2,3" />
+          <text x="97" y="49.2" fill="#3a2e1a" fontSize="1.8" textAnchor="end">─ linha do meio ─</text>
+
+          {/* Ally base zone */}
+          <rect x="35" y="83" width="30" height="14" fill="#0a1020" stroke="#4a9eff" strokeWidth="0.3" rx="1" opacity="0.5" />
+          <text x="50" y="92" fill="#4a9eff" fontSize="1.8" textAnchor="middle" opacity="0.6">NOSSA BASE</text>
+
+          {/* Enemy base zone */}
+          <rect x="35" y="3" width="30" height="14" fill="#200a0a" stroke="#ff5555" strokeWidth="0.3" rx="1" opacity="0.5" />
+          <text x="50" y="12" fill="#ff5555" fontSize="1.8" textAnchor="middle" opacity="0.6">BASE INIMIGA</text>
+
+          {/* ── POINTS ── */}
+          {uniquePoints.map((pt) => {
+            const isHov = hovered?.id === pt.id;
+            const r = pt.size / 10;
+            return (
+              <g key={pt.id}
+                style={{ cursor: "pointer" }}
+                onMouseEnter={(e) => handleMouseEnter(pt, e)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                {/* Glow ring on hover */}
+                {isHov && (
+                  <circle cx={pt.x} cy={pt.y} r={r + 1.5}
+                    fill="none" stroke={pt.color} strokeWidth="0.5" opacity="0.5" />
+                )}
+                {/* Pulse ring */}
+                <circle cx={pt.x} cy={pt.y} r={r + 0.8}
+                  fill="none" stroke={pt.color} strokeWidth="0.2" opacity={isHov ? 0.9 : 0.3} />
+                {/* Main dot */}
+                <circle cx={pt.x} cy={pt.y} r={r}
+                  fill={pt.color + (isHov ? "40" : "20")}
+                  stroke={pt.color}
+                  strokeWidth={isHov ? "0.6" : "0.4"}
+                />
+                {/* Emoji */}
+                <text x={pt.x} y={pt.y + r * 0.45}
+                  fontSize={r * 1.2}
+                  textAnchor="middle"
+                  style={{ pointerEvents: "none" }}
+                >{pt.emoji}</text>
+                {/* Label */}
+                <text x={pt.x} y={pt.y + r + 1.8}
+                  fontSize="1.5" textAnchor="middle"
+                  fill={isHov ? pt.color : "#5a4e30"}
+                  style={{ pointerEvents: "none" }}
+                >{pt.label}</text>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Tooltip */}
+        {hovered && (() => {
+          const tipW = 280;
+          const wrapW = wrapRef.current ? wrapRef.current.getBoundingClientRect().width : 600;
+          const left = tooltip.x + tipW + 16 > wrapW ? tooltip.x - tipW - 12 : tooltip.x + 12;
+          const top = Math.max(0, tooltip.y - 10);
+          return (
+            <div style={{
+              position: "absolute", left, top,
+              width: tipW, background: "#0f0e0b",
+              border: `1px solid ${hovered.color}`,
+              borderLeft: `3px solid ${hovered.color}`,
+              padding: "12px 14px", pointerEvents: "none",
+              zIndex: 99, boxShadow: `0 4px 24px ${hovered.color}30`,
+            }}>
+              <div style={{ fontSize: "13px", color: hovered.color, fontWeight: "bold", marginBottom: "8px" }}>
+                {hovered.emoji} {hovered.title}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#7a6540" }}>
+                  ⏱ <span style={{ color: "#c4b080" }}>{hovered.timing}</span>
+                </div>
+                {hovered.respawn !== "—" && (
+                  <div style={{ fontSize: "11px", color: "#7a6540" }}>
+                    🔄 <span style={{ color: "#9a8a60" }}>{hovered.respawn}</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: "12px", color: "#7a6e50", lineHeight: "1.6", marginBottom: "8px" }}>
+                {hovered.info}
+              </div>
+              <div style={{ borderTop: `1px solid ${hovered.color}30`, paddingTop: "8px" }}>
+                <div style={{ fontSize: "10px", letterSpacing: "2px", color: hovered.color, marginBottom: "4px", textTransform: "uppercase" }}>O que fazer</div>
+                <div style={{ fontSize: "12px", color: "#8a7a58", lineHeight: "1.5" }}>{hovered.action}</div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Timing Timeline */}
+      <div style={{ marginTop: "24px", background: "#0f0e0b", border: "1px solid #2a2010", padding: "16px 20px" }}>
+        <div style={{ fontSize: "11px", letterSpacing: "4px", color: "#5a4e30", marginBottom: "16px", textTransform: "uppercase" }}>
+          ⏱ Timeline da Partida
+        </div>
+        <div style={{ position: "relative", paddingTop: "8px" }}>
+          {/* Line */}
+          <div style={{ position: "absolute", top: "20px", left: 0, right: 0, height: "2px", background: "#2a2010" }} />
+          <div style={{ display: "flex", justifyContent: "space-between", position: "relative" }}>
+            {[
+              { time: "0:00", label: "Início", sub: "Mobs spawnam nos jungles", color: "#7ec4a8" },
+              { time: "5:00", label: "Mobs", sub: "Respawn jungle (1ª vez)", color: "#7ec4a8" },
+              { time: "10:00", label: "DUELO", sub: "Halftime 1v1 obrigatório", color: "#e05050" },
+              { time: "15:00", label: "Mini-Boss", sub: "Spawna no mid (posição aleatória)", color: "#e8c97e" },
+              { time: "20:00", label: "Mobs", sub: "Respawn jungle", color: "#7ec4a8" },
+              { time: "25:00", label: "Mini-Boss", sub: "2º spawn no mid", color: "#e8c97e" },
+              { time: "35:00", label: "FIM", sub: "Critérios de vitória por pontos", color: "#c47e7e" },
+            ].map((ev) => (
+              <div key={ev.time} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: ev.color, border: "2px solid #0f0e0b", zIndex: 1, marginBottom: "8px" }} />
+                <div style={{ fontSize: "11px", color: ev.color, fontWeight: "bold", textAlign: "center" }}>{ev.time}</div>
+                <div style={{ fontSize: "11px", color: "#c4b080", textAlign: "center", marginTop: "2px" }}>{ev.label}</div>
+                <div style={{ fontSize: "10px", color: "#5a4e30", textAlign: "center", marginTop: "2px", maxWidth: "70px" }}>{ev.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Commander Buffs */}
+      <div style={{ marginTop: "16px", background: "#0f0e0b", border: "1px solid #2a2010", padding: "16px 20px" }}>
+        <div style={{ fontSize: "11px", letterSpacing: "4px", color: "#5a4e30", marginBottom: "14px", textTransform: "uppercase" }}>
+          🪙 Buffs do Commander (Fun Coins)
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" }}>
+          {[
+            { name: "Frontline Zeal", priority: "🥇 PRIORITÁRIO", desc: "Stacking permanente de dano contra torres e Goose + velocidade de carregamento da árvore. Custo aumenta a cada uso. Comprar cedo e sempre.", color: "#e8c97e" },
+            { name: "Hair Pulling", priority: "🥈 ALTO", desc: "+100% dano ao Goose por 10s. Usar quando o time inteiro tiver foco no Goose. Coordenar com EX skills da Nameless Sword.", color: "#a8c4e0" },
+            { name: "Sprint", priority: "🥈 ALTO", desc: "+100% velocidade do carrier da Fortune Tree por 10s. Combinar com Relentless Advance para sair da base inimiga rapidamente.", color: "#a8c4e0" },
+            { name: "Relentless Advance", priority: "🥉 MÉDIO", desc: "Árvore ignora interceptação por 5s. Combo com Sprint para o carrier escapar da base inimiga.", color: "#7ec4a8" },
+            { name: "Last Stand", priority: "🥉 MÉDIO", desc: "-30% tempo de respawn do time por 1 minuto. Usar após wipes parciais para recuperar rapidamente.", color: "#7ec4a8" },
+            { name: "Anti-Heal", priority: "⚡ SITUACIONAL", desc: "Reduz cura inimiga. Usar durante grandes teamfights quando o time inimigo tiver muitos healers ativos.", color: "#c47e7e" },
+          ].map(b => (
+            <div key={b.name} style={{ padding: "10px 12px", background: "#0d0c0a", borderLeft: `2px solid ${b.color}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                <span style={{ fontSize: "13px", color: "#c4b080" }}>{b.name}</span>
+                <span style={{ fontSize: "10px", color: b.color }}>{b.priority}</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#5a4e44", lineHeight: "1.5" }}>{b.desc}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
