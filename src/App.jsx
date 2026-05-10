@@ -829,44 +829,194 @@ function GVGMap() {
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHovered(null)}
         >
-          {/* Background */}
-          <rect x="0" y="0" width="100" height="100" fill="#0a0908" rx="2" />
+          <defs>
+            <radialGradient id="grd" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stopColor="#c8955a"/>
+              <stop offset="55%" stopColor="#b07840"/>
+              <stop offset="100%" stopColor="#8a5c2a"/>
+            </radialGradient>
+            <radialGradient id="redGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ff3322" stopOpacity="0.9"/>
+              <stop offset="100%" stopColor="#ff3322" stopOpacity="0"/>
+            </radialGradient>
+            <radialGradient id="blueBase" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#2255cc" stopOpacity="0.5"/>
+              <stop offset="100%" stopColor="#2255cc" stopOpacity="0"/>
+            </radialGradient>
+          </defs>
 
-          {/* Outer border */}
-          <rect x="1" y="1" width="98" height="98" fill="none" stroke="#2a2010" strokeWidth="0.3" rx="1.5" />
+          {/* === GRASS EXTERIOR === */}
+          <rect x="0" y="0" width="100" height="100" fill="#2a5014"/>
+          {/* Grass texture patches */}
+          {[[8,12],[85,8],[5,80],[90,75],[15,50],[82,52],[50,3],[50,95],[30,18],[70,18],[28,82],[72,82]].map(([gx,gy],i)=>(
+            <ellipse key={i} cx={gx} cy={gy} rx="4" ry="2.5" fill="#336018" opacity="0.6" transform={`rotate(${i*30},${gx},${gy})`}/>
+          ))}
 
-          {/* ── LANE PATHS ── */}
-          {/* Mid lane */}
-          <rect x="44" y="5" width="12" height="90" fill="#141008" rx="1" />
-          {/* Top lane (left) */}
-          <rect x="3" y="5" width="10" height="90" fill="#0f0d06" rx="1" />
-          <line x1="8" y1="5" x2="8" y2="95" stroke="#2a2010" strokeWidth="0.15" strokeDasharray="1,2" />
-          {/* Bot lane (right) */}
-          <rect x="87" y="5" width="10" height="90" fill="#0f0d06" rx="1" />
-          <line x1="92" y1="5" x2="92" y2="95" stroke="#2a2010" strokeWidth="0.15" strokeDasharray="1,2" />
+          {/* === OUTER WALL SHADOW === */}
+          <ellipse cx="50.6" cy="51.2" rx="46" ry="47" fill="#0a0806" opacity="0.7"/>
 
-          {/* Jungle areas */}
-          <rect x="13" y="30" width="30" height="40" fill="#080b09" rx="1" opacity="0.7" />
-          <rect x="57" y="30" width="30" height="40" fill="#080b09" rx="1" opacity="0.7" />
+          {/* === STONE WALL (outer) === */}
+          <ellipse cx="50" cy="50" rx="46" ry="47" fill="#5a6070"/>
+          {/* Wall facing / lighter top edge */}
+          <ellipse cx="50" cy="50" rx="46" ry="47" fill="none" stroke="#7a8090" strokeWidth="0.8"/>
+          {/* Wall inner edge */}
+          <ellipse cx="50" cy="50" rx="43.5" ry="44.5" fill="none" stroke="#484e5e" strokeWidth="0.5"/>
 
-          {/* Lane labels */}
-          <text x="8" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 8, 50)">LANE TOP</text>
-          <text x="50" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 50, 50)">LANE MID</text>
-          <text x="92" y="50" fill="#2a2010" fontSize="2.5" textAnchor="middle" transform="rotate(-90, 92, 50)">LANE BOT</text>
-          <text x="28" y="50" fill="#1a2a1a" fontSize="2" textAnchor="middle">JUNGLE</text>
-          <text x="72" y="50" fill="#1a2a1a" fontSize="2" textAnchor="middle">JUNGLE</text>
+          {/* Wall stone texture lines */}
+          {[0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345].map((deg,i)=>{
+            const rad = deg*Math.PI/180;
+            const x1 = 50 + 43*Math.cos(rad); const y1 = 50 + 44*Math.sin(rad);
+            const x2 = 50 + 46*Math.cos(rad); const y2 = 50 + 47*Math.sin(rad);
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#3a4050" strokeWidth="0.4" opacity="0.7"/>;
+          })}
 
-          {/* Center divider line */}
-          <line x1="3" y1="50" x2="97" y2="50" stroke="#2a2010" strokeWidth="0.2" strokeDasharray="2,3" />
-          <text x="97" y="49.2" fill="#3a2e1a" fontSize="1.8" textAnchor="end">─ linha do meio ─</text>
+          {/* === SANDY INTERIOR GROUND === */}
+          <ellipse cx="50" cy="50" rx="43.5" ry="44.5" fill="url(#grd)"/>
 
-          {/* Ally base zone */}
-          <rect x="35" y="83" width="30" height="14" fill="#0a1020" stroke="#4a9eff" strokeWidth="0.3" rx="1" opacity="0.5" />
-          <text x="50" y="92" fill="#4a9eff" fontSize="1.8" textAnchor="middle" opacity="0.6">NOSSA BASE</text>
+          {/* Ground variation patches */}
+          <ellipse cx="32" cy="58" rx="14" ry="9" fill="#9a6830" opacity="0.25"/>
+          <ellipse cx="68" cy="42" rx="12" ry="8" fill="#9a6830" opacity="0.2"/>
+          <ellipse cx="50" cy="50" rx="8" ry="6" fill="#aa7038" opacity="0.15"/>
+          <ellipse cx="22" cy="38" rx="7" ry="5" fill="#9a6830" opacity="0.18"/>
+          <ellipse cx="78" cy="62" rx="7" ry="5" fill="#9a6830" opacity="0.18"/>
 
-          {/* Enemy base zone */}
-          <rect x="35" y="3" width="30" height="14" fill="#200a0a" stroke="#ff5555" strokeWidth="0.3" rx="1" opacity="0.5" />
-          <text x="50" y="12" fill="#ff5555" fontSize="1.8" textAnchor="middle" opacity="0.6">BASE INIMIGA</text>
+          {/* Lane paths – slightly lighter sandy strips */}
+          <rect x="5" y="14" width="9" height="72" fill="#c8906a" opacity="0.18" rx="1"/>
+          <rect x="45.5" y="8" width="9" height="84" fill="#c8906a" opacity="0.15" rx="1"/>
+          <rect x="86" y="14" width="9" height="72" fill="#c8906a" opacity="0.18" rx="1"/>
+
+          {/* Mid lane center line */}
+          <line x1="50" y1="10" x2="50" y2="90" stroke="#b87840" strokeWidth="0.25" strokeDasharray="2,3" opacity="0.4"/>
+
+          {/* === GATE TOP (ENEMY BASE) — large wooden pavilion === */}
+          {/* Gate gap in wall */}
+          <ellipse cx="50" cy="50" rx="43.5" ry="44.5" fill="#2a5014" clipPath="none"
+            style={{display:"none"}}/>
+          {/* Erase wall at top for gate opening */}
+          <rect x="44" y="2" width="12" height="8" fill="#2a5014"/>
+          {/* Gate roof */}
+          <polygon points="40,6 50,1 60,6" fill="#3a3020" stroke="#2a2010" strokeWidth="0.3"/>
+          <polygon points="41,6 50,1.8 59,6" fill="#4a4028"/>
+          {/* Gate walls */}
+          <rect x="41" y="5" width="5" height="6" fill="#3a3420" stroke="#2a2015" strokeWidth="0.2"/>
+          <rect x="54" y="5" width="5" height="6" fill="#3a3420" stroke="#2a2015" strokeWidth="0.2"/>
+          {/* Gate door opening */}
+          <rect x="47" y="6" width="6" height="5" fill="#1a1008" rx="0.3"/>
+          {/* Gate roof ridge */}
+          <line x1="40" y1="6" x2="60" y2="6" stroke="#2a2010" strokeWidth="0.4"/>
+          {/* Roof tiles */}
+          {[41,43,45,47,49,51,53,55,57].map((rx,i)=>(
+            <line key={i} x1={rx} y1="6" x2={rx+1} y2="2.5" stroke="#2a2010" strokeWidth="0.2" opacity="0.5"/>
+          ))}
+          {/* Enemy indicator */}
+          <rect x="47.5" y="3" width="5" height="1.5" fill="#cc2222" opacity="0.8" rx="0.2"/>
+
+          {/* === GATE BOTTOM (ALLY BASE) === */}
+          <rect x="44" y="90" width="12" height="8" fill="#2a5014"/>
+          <polygon points="40,94 50,99 60,94" fill="#3a3020" stroke="#2a2010" strokeWidth="0.3"/>
+          <polygon points="41,94 50,98.2 59,94" fill="#4a4028"/>
+          <rect x="41" y="89" width="5" height="6" fill="#3a3420" stroke="#2a2015" strokeWidth="0.2"/>
+          <rect x="54" y="89" width="5" height="6" fill="#3a3420" stroke="#2a2015" strokeWidth="0.2"/>
+          <rect x="47" y="89" width="6" height="5" fill="#1a1008" rx="0.3"/>
+          <line x1="40" y1="94" x2="60" y2="94" stroke="#2a2010" strokeWidth="0.4"/>
+          {[41,43,45,47,49,51,53,55,57].map((rx,i)=>(
+            <line key={i} x1={rx} y1="94" x2={rx+1} y2="97.5" stroke="#2a2010" strokeWidth="0.2" opacity="0.5"/>
+          ))}
+          <rect x="47.5" y="95.5" width="5" height="1.5" fill="#2255cc" opacity="0.8" rx="0.2"/>
+
+          {/* === BARRICADE CLUSTERS — helper inline === */}
+          {/* Each cluster: group of 6-8 small rectangles (wooden fortifications) */}
+          {/* Structure dims: rw=2.5, rh=1.8, gap=0.4, cluster=2r×3c = 8.7×4.0 */}
+          {[
+            // Left lane — 4 clusters running top to bottom
+            {cx:6.5, cy:20}, {cx:6.5, cy:33}, {cx:6.5, cy:57}, {cx:6.5, cy:70},
+            // Left mid-field — upper and lower
+            {cx:26, cy:22}, {cx:26, cy:36}, {cx:26, cy:62}, {cx:26, cy:75},
+            // Center upper & lower (flanking mid lane)
+            {cx:39, cy:24}, {cx:39, cy:74},
+            {cx:53, cy:24}, {cx:53, cy:74},
+            // Right mid-field
+            {cx:65, cy:22}, {cx:65, cy:36}, {cx:65, cy:62}, {cx:65, cy:75},
+            // Right lane
+            {cx:84, cy:20}, {cx:84, cy:33}, {cx:84, cy:57}, {cx:84, cy:70},
+          ].map(({cx,cy},ci) => (
+            <g key={ci}>
+              {/* Shadow */}
+              <rect x={cx+0.3} y={cy+4.3} width={9} height={0.7} fill="#0a0604" opacity="0.45" rx="0.2"/>
+              {/* 2 rows × 3 cols of planks */}
+              {[0,1].map(row=>[0,1,2].map(col=>(
+                <rect key={`${row}-${col}`}
+                  x={cx + col*3.0} y={cy + row*2.4}
+                  width={2.5} height={1.8}
+                  fill={row===0?"#3e2e14":"#362810"}
+                  stroke="#1e1206" strokeWidth="0.25" rx="0.15"
+                />
+              )))}
+              {/* Wood grain lines */}
+              {[0,1,2].map(col=>(
+                <line key={col} x1={cx+col*3+1.2} y1={cy} x2={cx+col*3+1.2} y2={cy+4.2}
+                  stroke="#1e1206" strokeWidth="0.15" opacity="0.5"/>
+              ))}
+            </g>
+          ))}
+
+          {/* === CENTER SPARSE STRUCTURES === */}
+          {/* A few isolated barricades in the mid zone */}
+          {[[46,43],[50.5,43],[46,54],[50.5,54]].map(([bx,by],i)=>(
+            <rect key={i} x={bx} y={by} width={2.5} height={1.8}
+              fill="#362810" stroke="#1e1206" strokeWidth="0.25" rx="0.15"/>
+          ))}
+
+          {/* === TREES — Jungle Left (x~18-34, y~36-64) === */}
+          {[
+            [19,38],[22,44],[17,50],[20,56],[24,62],[28,40],[31,48],[27,56],[23,52],[30,34],[18,66]
+          ].map(([tx,ty],i)=>(
+            <g key={i}>
+              <circle cx={tx} cy={ty} r={2.2} fill="#1e5010" opacity="0.9"/>
+              <circle cx={tx} cy={ty} r={1.3} fill="#164010"/>
+              <circle cx={tx-0.5} cy={ty-0.6} r={0.7} fill="#2a6818" opacity="0.7"/>
+            </g>
+          ))}
+
+          {/* === TREES — Jungle Right (mirror) === */}
+          {[
+            [81,38],[78,44],[83,50],[80,56],[76,62],[72,40],[69,48],[73,56],[77,52],[70,34],[82,66]
+          ].map(([tx,ty],i)=>(
+            <g key={i}>
+              <circle cx={tx} cy={ty} r={2.2} fill="#1e5010" opacity="0.9"/>
+              <circle cx={tx} cy={ty} r={1.3} fill="#164010"/>
+              <circle cx={tx+0.5} cy={ty-0.6} r={0.7} fill="#2a6818" opacity="0.7"/>
+            </g>
+          ))}
+
+          {/* A few wall-side trees near the perimeter */}
+          {[[8,28],[8,72],[92,28],[92,72],[26,12],[74,12],[26,88],[74,88]].map(([tx,ty],i)=>(
+            <g key={i}>
+              <circle cx={tx} cy={ty} r={1.6} fill="#1a4a0e" opacity="0.8"/>
+              <circle cx={tx} cy={ty} r={0.85} fill="#123008"/>
+            </g>
+          ))}
+
+          {/* === CENTER RED FLAG / OBJECTIVE MARKER === */}
+          <circle cx="50" cy="50" r="5" fill="url(#redGlow)"/>
+          <circle cx="50" cy="50" r="2.2" fill="#cc1a0a" stroke="#ff3322" strokeWidth="0.4"/>
+          {/* Flag pole */}
+          <line x1="50" y1="47" x2="50" y2="53" stroke="#8a6a30" strokeWidth="0.4"/>
+          {/* Flag */}
+          <polygon points="50,47.2 53.5,48.4 50,49.6" fill="#ee2222"/>
+
+          {/* === DIVIDER LINE (center of map) === */}
+          <line x1="6" y1="50" x2="94" y2="50" stroke="#8a6a30" strokeWidth="0.3" strokeDasharray="2,2.5" opacity="0.5"/>
+          <text x="96" y="50.6" fill="#7a5a28" fontSize="1.6" textAnchor="start" opacity="0.7">·50·</text>
+
+          {/* === ZONE LABELS === */}
+          <text x="50" y="9" fill="#ff5555" fontSize="2.2" textAnchor="middle" opacity="0.8" fontWeight="bold">⚔ BASE INIMIGA</text>
+          <text x="50" y="96" fill="#4a9eff" fontSize="2.2" textAnchor="middle" opacity="0.8" fontWeight="bold">🛡 NOSSA BASE</text>
+          <text x="13" y="50.5" fill="#7ec4a8" fontSize="1.8" textAnchor="middle" opacity="0.6" transform="rotate(-90,13,50.5)">JUNGLE ▲</text>
+          <text x="87" y="50.5" fill="#7ec4a8" fontSize="1.8" textAnchor="middle" opacity="0.6" transform="rotate(90,87,50.5)">JUNGLE ▲</text>
+
+          {/* Ally base glow */}
+          <ellipse cx="50" cy="92" rx="10" ry="4" fill="url(#blueBase)" opacity="0.6"/>
 
           {/* ── POINTS ── */}
           {uniquePoints.map((pt) => {
